@@ -156,12 +156,29 @@ Redis连接成功: ...
 
 ### 问题 2: WebSocket 连接失败
 
-**错误信息**: `WebSocket错误: ...`
+**错误信息**: `WebSocket错误: Handshake status 200 OK`
 
-**解决方案**:
-1. 检查 `WHALE_ALERT_API_KEY` 是否正确
-2. 检查网络连接（Railway 应该可以正常访问外部 API）
-3. 查看完整错误日志
+**这是最常见的 WebSocket 问题，可能的原因：**
+
+1. **API 密钥问题**
+   - 检查 `WHALE_ALERT_API_KEY` 是否正确设置
+   - 确认密钥未过期
+   - 确认订阅计划支持 WebSocket/Custom Alerts
+
+2. **端点问题**
+   - 当前使用: `wss://leviathan.whale-alert.io/ws?api_key={key}`
+   - 如果不行，尝试设置 `WHALE_ALERT_WS_URL` 环境变量使用其他端点
+
+3. **认证方式**
+   - 某些 API 版本可能需要不同的认证方式
+   - 检查 Whale Alert 官方文档
+
+**详细解决方案请参考**: [RAILWAY_WEBSOCKET_FIX.md](./RAILWAY_WEBSOCKET_FIX.md)
+
+**快速检查**:
+1. 在 Railway 日志中查看 "API 密钥长度" 信息
+2. 如果看到 "API 密钥似乎无效"，检查环境变量
+3. 尝试在本地运行相同代码，确认是否是 Railway 环境问题
 
 ### 问题 3: 服务频繁重启
 

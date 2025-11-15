@@ -171,16 +171,47 @@ class WhaleAlertWebSocket:
         """处理错误"""
         error_str = str(error)
         print(f"WebSocket错误: {error_str}")
+        
+        # 如果是握手错误，提供更详细的诊断信息
+        if "Handshake status" in error_str or "200 OK" in error_str:
+            print("\n⚠️  WebSocket 握手失败 - 可能的原因：")
+            print("1. API 密钥无效或已过期")
+            print("2. API 密钥没有 WebSocket 权限")
+            print("3. WebSocket 端点不正确")
+            print("4. 需要不同的认证方式")
+            print("\n建议检查：")
+            print(f"- 确认 WHALE_ALERT_API_KEY 环境变量已正确设置")
+            print(f"- 登录 Whale Alert 控制台确认 API 密钥状态")
+            print(f"- 确认订阅计划支持 WebSocket/Custom Alerts")
+            print(f"- 尝试在本地测试连接以排除网络问题")
     
     def on_close(self, ws, close_status_code, close_msg):
         """连接关闭"""
         close_msg_str = str(close_msg) if close_msg else ""
         print(f"WebSocket连接关闭 (code: {close_status_code}, msg: {close_msg_str})")
-        self.subscribed = False
-        self.running = False
         
-        # 自动重连（非正常关闭）
-        if close_status_code != 1000:  # 非正常关闭
+        # 解释关闭代码
+        if close_status_code == 1000:
+            print("正常关闭")
+        elif close_status_code == 1001:
+            print("端点离开（服务器关闭或浏览器导航）")
+        elif close_status_code == 1006:
+            print("异常关闭（连接未正常关闭）")
+        elif close_status_code == 1008:
+            print("策略违规")
+        elif close_status_code == 1011:
+            print("服务器错误")
+        elif close_status_code == 4001:
+            print("认证失败 - 请检查 API 密钥")
+        elif close_status_code == 4003:
+            print("订阅错误 - 请检查订阅参数")
+        else:
+            print(f"未知关闭代码: {close_status_code}")
+        
+        self.subscribed = False
+        
+        # 自动重连（非正常关闭且仍在运行）
+        if close_status_code != 1000 and self.running:  # 非正常关闭
             print(f"{self.reconnect_delay}秒后尝试重连...")
             time.sleep(self.reconnect_delay)
             if self.running:  # 如果还在运行，尝试重连
@@ -228,18 +259,42 @@ class WhaleAlertWebSocket:
         # 根据官方文档，API key 在 URL 中传递：wss://leviathan.whale-alert.io/ws?api_key={key}
         # 不需要额外的 header
         
+        # 验证 API 密钥格式（基本检查）
+        if not self.api_key or len(self.api_key.strip()) < 10:
+            print("⚠️  警告: API 密钥似乎无效（太短）")
+            print("请检查 WHALE_ALERT_API_KEY 环境变量是否正确设置")
+        
+        # 尝试添加额外的 headers（某些 API 可能需要）
+        headers = {}
+        # 某些 WebSocket 服务可能需要 User-Agent
+        headers['User-Agent'] = 'WhaleAlertTrends/1.0'
+        
         self.ws = websocket.WebSocketApp(
             self.ws_url,
             on_open=self.on_open,
             on_message=self.on_message,
             on_error=self.on_error,
-            on_close=self.on_close
+            on_close=self.on_close,
+            header=headers
         )
         self.running = True
         # 不显示完整的URL（包含API key）
         display_url = self.ws_url.split('?')[0] if '?' in self.ws_url else self.ws_url
         print(f"正在连接到 {display_url}...")
-        self.ws.run_forever()
+        print(f"API 密钥长度: {len(self.api_key)} 字符")
+        
+        try:
+            self.ws.run_forever(
+                ping_interval=30,  # 每30秒发送ping保持连接
+                ping_timeout=10     # ping超时10秒
+            )
+        except Exception as e:
+            print(f"WebSocket 运行错误: {e}")
+            if self.running:
+                print(f"{self.reconnect_delay}秒后尝试重连...")
+                time.sleep(self.reconnect_delay)
+                if self.running:
+                    self.start()  # 递归重连
     
     def stop(self):
         """停止WebSocket连接"""
