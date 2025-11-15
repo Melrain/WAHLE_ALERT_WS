@@ -1,0 +1,29 @@
+# 数据处理
+pandas>=2.0.0
+numpy>=1.24.0
+
+# 统计分析
+statsmodels>=0.14.0
+scipy>=1.10.0
+
+# API调用
+requests>=2.31.0
+ccxt>=4.0.0
+
+# 可视化
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.14.0
+
+# 工具
+python-dotenv>=1.0.0
+jupyter>=1.0.0
+
+# 时间处理
+python-dateutil>=2.8.0
+pytz>=2023.3
+
+# WebSocket和Redis
+redis>=5.0.0
+websocket-client>=1.6.0
+
