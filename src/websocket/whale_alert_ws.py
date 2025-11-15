@@ -42,6 +42,8 @@ class WhaleAlertWebSocket:
         self.running = False
         self.reconnect_delay = 5  # 重连延迟（秒）
         self.subscribed = False  # 订阅状态
+        self.consecutive_429_errors = 0  # 连续 429 错误计数
+        self.max_reconnect_delay = 300  # 最大重连延迟（5分钟）
     
     def on_message(self, ws, message):
         """处理接收到的消息"""
@@ -68,15 +70,36 @@ class WhaleAlertWebSocket:
                     print(f"  - 币种: {settings.SYMBOLS if settings.SYMBOLS else '所有币种'}")
                     print(f"  - 区块链: {settings.BLOCKCHAINS if settings.BLOCKCHAINS else '所有链'}")
                     print(f"  - 最小金额: ${settings.WHALE_ALERT_MIN_VALUE_USD:,.0f}")
-                    print("\n建议配置（在 Railway 环境变量中设置）：")
+                    print("\n建议配置（在 .env 文件中设置）：")
                     print("  SYMBOLS=btc,eth,sol")
                     print("  BLOCKCHAINS=  # 留空，监测所有链")
                     print("  WHALE_ALERT_MIN_VALUE_USD=1000000  # 增加到 100 万美元")
                     
+                elif 'symbol' in error_lower:
+                    print("\n⚠️  币种符号错误")
+                    print("可能某些币种符号不正确或不被支持")
+                    print("\n排查步骤：")
+                    print("1. 先测试单个币种，例如: SYMBOLS=btc")
+                    print("2. 如果成功，逐个添加其他币种")
+                    print("3. 常见可能的问题币种：")
+                    print("   - matic 可能应该是 polygon 或其他")
+                    print("   - avax 可能应该是 avalanche 或其他")
+                    print("   - bnb 可能应该是 binance-coin 或其他")
+                    print("4. 可以查看 Whale Alert 官方文档或使用 /status API 获取有效币种列表")
+                    print(f"\n当前尝试的币种: {settings.SYMBOLS}")
+                    print("建议: 先只测试 btc 或 eth，确认配置正确后再添加其他币种")
+                    print("\n临时解决方案（在 .env 中设置）：")
+                    print("  SYMBOLS=btc,eth,usdt")
+                    print("  BLOCKCHAINS=")
+                    
                 elif 'blockchain' in error_lower:
-                    print("\n提示: 可能某些区块链名称不正确")
-                    print("常见正确的区块链名称: bitcoin, ethereum, solana, avalanche, polygon, bsc, ripple, tron")
-                    print("如果只想订阅币种，可以尝试不提供 blockchains 参数")
+                    print("\n⚠️  区块链名称错误")
+                    print("可能某些区块链名称不正确")
+                    print("\n常见正确的区块链名称: bitcoin, ethereum, solana, avalanche, polygon, bsc, ripple, tron")
+                    print("如果只想订阅币种，可以尝试不提供 blockchains 参数（留空）")
+                    print(f"\n当前尝试的区块链: {settings.BLOCKCHAINS}")
+                    print("\n建议（在 .env 中设置）：")
+                    print("  BLOCKCHAINS=  # 留空，让 API 自动监测所有链")
                     
                 elif 'api' in error_lower or 'key' in error_lower or 'auth' in error_lower:
                     print("\n⚠️  API 认证错误")
@@ -90,6 +113,9 @@ class WhaleAlertWebSocket:
             if msg_type == 'subscribed_alerts':
                 # 订阅确认消息（注意：返回的是 'subscribed_alerts' 不是 'subscribe_alerts'）
                 self.subscribed = True
+                # 成功订阅后，重置 429 错误计数
+                self.consecutive_429_errors = 0
+                self.reconnect_delay = 5
                 print(f"✓ 订阅成功: ID={data.get('id', 'N/A')}, "
                       f"区块链={data.get('blockchains', [])}, "
                       f"币种={data.get('symbols', [])}, "
@@ -195,18 +221,56 @@ class WhaleAlertWebSocket:
         error_str = str(error)
         print(f"WebSocket错误: {error_str}")
         
+        # 检测 429 Too Many Requests 错误
+        if "429" in error_str or "Too Many Requests" in error_str:
+            self.consecutive_429_errors += 1
+            # 指数退避：5秒 -> 10秒 -> 20秒 -> 40秒 -> 80秒 -> 最多5分钟
+            self.reconnect_delay = min(5 * (2 ** (self.consecutive_429_errors - 1)), self.max_reconnect_delay)
+            print(f"\n⚠️  请求过于频繁 (429 Too Many Requests)")
+            print(f"连续 429 错误次数: {self.consecutive_429_errors}")
+            print(f"将等待 {self.reconnect_delay} 秒后重连...")
+            print("\n建议：")
+            print("1. 检查是否在短时间内多次启动程序")
+            print("2. 等待更长时间后再重试")
+            print("3. 如果持续出现，可能需要联系 Whale Alert 支持")
+        else:
+            # 非 429 错误，重置计数器
+            self.consecutive_429_errors = 0
+            self.reconnect_delay = 5  # 重置为默认延迟
+        
         # 如果是握手错误，提供更详细的诊断信息
-        if "Handshake status" in error_str or "200 OK" in error_str:
-            print("\n⚠️  WebSocket 握手失败 - 可能的原因：")
-            print("1. API 密钥无效或已过期")
-            print("2. API 密钥没有 WebSocket 权限")
-            print("3. WebSocket 端点不正确")
-            print("4. 需要不同的认证方式")
-            print("\n建议检查：")
-            print(f"- 确认 WHALE_ALERT_API_KEY 环境变量已正确设置")
-            print(f"- 登录 Whale Alert 控制台确认 API 密钥状态")
-            print(f"- 确认订阅计划支持 WebSocket/Custom Alerts")
-            print(f"- 尝试在本地测试连接以排除网络问题")
+        if "Handshake status" in error_str:
+            status_code = None
+            if "429" in error_str:
+                status_code = "429"
+            elif "401" in error_str or "403" in error_str:
+                status_code = "401/403"
+            elif "404" in error_str:
+                status_code = "404"
+            
+            if status_code:
+                print(f"\n⚠️  WebSocket 握手失败 (HTTP {status_code})")
+                if status_code == "429":
+                    print("请求过于频繁，请等待后重试")
+                elif status_code == "401/403":
+                    print("API 密钥认证失败")
+                    print("1. 检查 WHALE_ALERT_API_KEY 是否正确")
+                    print("2. 确认 API 密钥未过期")
+                    print("3. 确认订阅计划支持 WebSocket/Custom Alerts")
+                elif status_code == "404":
+                    print("WebSocket 端点不存在")
+                    print("请检查 WebSocket URL 是否正确")
+            else:
+                print("\n⚠️  WebSocket 握手失败 - 可能的原因：")
+                print("1. API 密钥无效或已过期")
+                print("2. API 密钥没有 WebSocket 权限")
+                print("3. WebSocket 端点不正确")
+                print("4. 需要不同的认证方式")
+                print("\n建议检查：")
+                print(f"- 确认 WHALE_ALERT_API_KEY 环境变量已正确设置")
+                print(f"- 登录 Whale Alert 控制台确认 API 密钥状态")
+                print(f"- 确认订阅计划支持 WebSocket/Custom Alerts")
+                print(f"- 尝试在本地测试连接以排除网络问题")
     
     def on_close(self, ws, close_status_code, close_msg):
         """连接关闭"""
@@ -235,10 +299,18 @@ class WhaleAlertWebSocket:
         
         # 自动重连（非正常关闭且仍在运行）
         if close_status_code != 1000 and self.running:  # 非正常关闭
-            print(f"{self.reconnect_delay}秒后尝试重连...")
+            # 如果是 429 错误导致的关闭，使用更长的延迟
+            if self.consecutive_429_errors > 0:
+                print(f"⚠️  由于请求过于频繁，将等待 {self.reconnect_delay} 秒后重连...")
+            else:
+                print(f"{self.reconnect_delay}秒后尝试重连...")
             time.sleep(self.reconnect_delay)
             if self.running:  # 如果还在运行，尝试重连
                 self.start()
+        else:
+            # 正常关闭，重置错误计数
+            self.consecutive_429_errors = 0
+            self.reconnect_delay = 5
     
     def on_open(self, ws):
         """连接建立后订阅"""
@@ -314,7 +386,11 @@ class WhaleAlertWebSocket:
         except Exception as e:
             print(f"WebSocket 运行错误: {e}")
             if self.running:
-                print(f"{self.reconnect_delay}秒后尝试重连...")
+                # 如果是 429 错误导致的异常，使用更长的延迟
+                if self.consecutive_429_errors > 0:
+                    print(f"⚠️  由于请求过于频繁，将等待 {self.reconnect_delay} 秒后重连...")
+                else:
+                    print(f"{self.reconnect_delay}秒后尝试重连...")
                 time.sleep(self.reconnect_delay)
                 if self.running:
                     self.start()  # 递归重连
