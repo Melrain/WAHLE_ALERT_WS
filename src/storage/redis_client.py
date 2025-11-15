@@ -60,10 +60,10 @@ class RedisClient:
             
             # 测试连接
             self.client.ping()
-            print(f"Redis连接成功: {display_info}")
+            print(f"Redis连接成功: {display_info}", flush=True)
         except redis.ConnectionError as e:
-            print(f"Redis连接失败: {e}")
-            print(f"请确保Redis服务正在运行: docker-compose up -d")
+            print(f"Redis连接失败: {e}", flush=True)
+            print(f"请确保Redis服务正在运行: docker-compose up -d", flush=True)
             raise
     
     def save_event(self, event_id: str, event_data: dict):

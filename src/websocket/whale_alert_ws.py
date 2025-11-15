@@ -53,57 +53,57 @@ class WhaleAlertWebSocket:
             # 检查是否有错误
             if 'error' in data:
                 error_msg = data.get('error', 'Unknown error')
-                print(f"✗ 订阅错误: {error_msg}")
-                print(f"完整错误信息: {data}")
+                print(f"✗ 订阅错误: {error_msg}", flush=True)
+                print(f"完整错误信息: {data}", flush=True)
                 
                 # 处理不同类型的错误
                 error_lower = error_msg.lower()
                 
                 if 'rate limit' in error_lower or 'limit exceeded' in error_lower:
-                    print("\n⚠️  警报速率限制超出！")
-                    print("Whale Alert API 每小时最多接收 100 条警报")
-                    print("\n解决方案：")
-                    print("1. 减少订阅的币种数量（建议 3-5 个主要币种）")
-                    print("2. 减少订阅的区块链数量（或留空以监测所有链）")
-                    print("3. 增加最小转账金额（WHALE_ALERT_MIN_VALUE_USD）")
-                    print("\n当前订阅配置：")
-                    print(f"  - 币种: {settings.SYMBOLS if settings.SYMBOLS else '所有币种'}")
-                    print(f"  - 区块链: {settings.BLOCKCHAINS if settings.BLOCKCHAINS else '所有链'}")
-                    print(f"  - 最小金额: ${settings.WHALE_ALERT_MIN_VALUE_USD:,.0f}")
-                    print("\n建议配置（在 .env 文件中设置）：")
-                    print("  SYMBOLS=btc,eth,sol")
-                    print("  BLOCKCHAINS=  # 留空，监测所有链")
-                    print("  WHALE_ALERT_MIN_VALUE_USD=1000000  # 增加到 100 万美元")
+                    print("\n⚠️  警报速率限制超出！", flush=True)
+                    print("Whale Alert API 每小时最多接收 100 条警报", flush=True)
+                    print("\n解决方案：", flush=True)
+                    print("1. 减少订阅的币种数量（建议 3-5 个主要币种）", flush=True)
+                    print("2. 减少订阅的区块链数量（或留空以监测所有链）", flush=True)
+                    print("3. 增加最小转账金额（WHALE_ALERT_MIN_VALUE_USD）", flush=True)
+                    print("\n当前订阅配置：", flush=True)
+                    print(f"  - 币种: {settings.SYMBOLS if settings.SYMBOLS else '所有币种'}", flush=True)
+                    print(f"  - 区块链: {settings.BLOCKCHAINS if settings.BLOCKCHAINS else '所有链'}", flush=True)
+                    print(f"  - 最小金额: ${settings.WHALE_ALERT_MIN_VALUE_USD:,.0f}", flush=True)
+                    print("\n建议配置（在 .env 文件中设置）：", flush=True)
+                    print("  SYMBOLS=btc,eth,sol", flush=True)
+                    print("  BLOCKCHAINS=  # 留空，监测所有链", flush=True)
+                    print("  WHALE_ALERT_MIN_VALUE_USD=1000000  # 增加到 100 万美元", flush=True)
                     
                 elif 'symbol' in error_lower:
-                    print("\n⚠️  币种符号错误")
-                    print("可能某些币种符号不正确或不被支持")
-                    print("\n排查步骤：")
-                    print("1. 先测试单个币种，例如: SYMBOLS=btc")
-                    print("2. 如果成功，逐个添加其他币种")
-                    print("3. 常见可能的问题币种：")
-                    print("   - matic 可能应该是 polygon 或其他")
-                    print("   - avax 可能应该是 avalanche 或其他")
-                    print("   - bnb 可能应该是 binance-coin 或其他")
-                    print("4. 可以查看 Whale Alert 官方文档或使用 /status API 获取有效币种列表")
-                    print(f"\n当前尝试的币种: {settings.SYMBOLS}")
-                    print("建议: 先只测试 btc 或 eth，确认配置正确后再添加其他币种")
-                    print("\n临时解决方案（在 .env 中设置）：")
-                    print("  SYMBOLS=btc,eth,usdt")
-                    print("  BLOCKCHAINS=")
+                    print("\n⚠️  币种符号错误", flush=True)
+                    print("可能某些币种符号不正确或不被支持", flush=True)
+                    print("\n排查步骤：", flush=True)
+                    print("1. 先测试单个币种，例如: SYMBOLS=btc", flush=True)
+                    print("2. 如果成功，逐个添加其他币种", flush=True)
+                    print("3. 常见可能的问题币种：", flush=True)
+                    print("   - matic 可能应该是 polygon 或其他", flush=True)
+                    print("   - avax 可能应该是 avalanche 或其他", flush=True)
+                    print("   - bnb 可能应该是 binance-coin 或其他", flush=True)
+                    print("4. 可以查看 Whale Alert 官方文档或使用 /status API 获取有效币种列表", flush=True)
+                    print(f"\n当前尝试的币种: {settings.SYMBOLS}", flush=True)
+                    print("建议: 先只测试 btc 或 eth，确认配置正确后再添加其他币种", flush=True)
+                    print("\n临时解决方案（在 .env 中设置）：", flush=True)
+                    print("  SYMBOLS=btc,eth,usdt", flush=True)
+                    print("  BLOCKCHAINS=", flush=True)
                     
                 elif 'blockchain' in error_lower:
-                    print("\n⚠️  区块链名称错误")
-                    print("可能某些区块链名称不正确")
-                    print("\n常见正确的区块链名称: bitcoin, ethereum, solana, avalanche, polygon, bsc, ripple, tron")
-                    print("如果只想订阅币种，可以尝试不提供 blockchains 参数（留空）")
-                    print(f"\n当前尝试的区块链: {settings.BLOCKCHAINS}")
-                    print("\n建议（在 .env 中设置）：")
-                    print("  BLOCKCHAINS=  # 留空，让 API 自动监测所有链")
+                    print("\n⚠️  区块链名称错误", flush=True)
+                    print("可能某些区块链名称不正确", flush=True)
+                    print("\n常见正确的区块链名称: bitcoin, ethereum, solana, avalanche, polygon, bsc, ripple, tron", flush=True)
+                    print("如果只想订阅币种，可以尝试不提供 blockchains 参数（留空）", flush=True)
+                    print(f"\n当前尝试的区块链: {settings.BLOCKCHAINS}", flush=True)
+                    print("\n建议（在 .env 中设置）：", flush=True)
+                    print("  BLOCKCHAINS=  # 留空，让 API 自动监测所有链", flush=True)
                     
                 elif 'api' in error_lower or 'key' in error_lower or 'auth' in error_lower:
-                    print("\n⚠️  API 认证错误")
-                    print("请检查 WHALE_ALERT_API_KEY 环境变量是否正确设置")
+                    print("\n⚠️  API 认证错误", flush=True)
+                    print("请检查 WHALE_ALERT_API_KEY 环境变量是否正确设置", flush=True)
                     
                 return
             
@@ -120,18 +120,18 @@ class WhaleAlertWebSocket:
                       f"区块链={data.get('blockchains', [])}, "
                       f"币种={data.get('symbols', [])}, "
                       f"交易类型={data.get('tx_types', [])}, "
-                      f"最小金额=${data.get('min_value_usd', 0):,.0f}")
+                      f"最小金额=${data.get('min_value_usd', 0):,.0f}", flush=True)
             elif 'channel_id' in data or 'transaction' in data:
                 # 这是实际的警报消息（AlertJSON格式）
                 self.handle_alert(data)
             else:
                 # 其他类型的消息
-                print(f"收到消息: {data}")
+                print(f"收到消息: {data}", flush=True)
                 
         except json.JSONDecodeError as e:
-            print(f"JSON解析错误: {e}, 消息: {message[:100]}")
+            print(f"JSON解析错误: {e}, 消息: {message[:100]}", flush=True)
         except Exception as e:
-            print(f"处理消息错误: {e}")
+            print(f"处理消息错误: {e}", flush=True)
     
     def handle_alert(self, alert_data: dict):
         """
@@ -145,14 +145,14 @@ class WhaleAlertWebSocket:
         event_id = transaction.get('hash', '')
         
         if not event_id:
-            print("警告: 收到的事件没有交易哈希")
+            print("警告: 收到的事件没有交易哈希", flush=True)
             return
         
         try:
             # 获取 amounts 数组（可能包含多个币种）
             amounts = alert_data.get('amounts', [])
             if not amounts:
-                print(f"警告: 事件 {event_id[:8]}... 没有金额信息")
+                print(f"警告: 事件 {event_id[:8]}... 没有金额信息", flush=True)
                 return
             
             # 处理第一个币种（如果有多个，可以扩展处理）
@@ -165,7 +165,7 @@ class WhaleAlertWebSocket:
             current_price = self.binance.get_current_price(currency)
             
             if not current_price:
-                print(f"无法获取价格: {currency.upper()}，跳过事件 {event_id[:8]}...")
+                print(f"无法获取价格: {currency.upper()}，跳过事件 {event_id[:8]}...", flush=True)
                 return
             
             # 准备事件数据
@@ -214,28 +214,28 @@ class WhaleAlertWebSocket:
             print(f"✓ 新事件: {event_id[:16]}... | "
                   f"从 {from_display} → {to_display} | "
                   f"{amount:,.2f} {currency.upper()} (${amount_usd:,.0f}) | "
-                  f"价格: ${current_price:,.2f}")
+                  f"价格: ${current_price:,.2f}", flush=True)
             
         except Exception as e:
-            print(f"处理警报错误: {e}, 数据: {alert_data}")
+            print(f"处理警报错误: {e}, 数据: {alert_data}", flush=True)
     
     def on_error(self, ws, error):
         """处理错误"""
         error_str = str(error)
-        print(f"WebSocket错误: {error_str}")
+        print(f"WebSocket错误: {error_str}", flush=True)
         
         # 检测 429 Too Many Requests 错误
         if "429" in error_str or "Too Many Requests" in error_str:
             self.consecutive_429_errors += 1
             # 指数退避：5秒 -> 10秒 -> 20秒 -> 40秒 -> 80秒 -> 最多5分钟
             self.reconnect_delay = min(5 * (2 ** (self.consecutive_429_errors - 1)), self.max_reconnect_delay)
-            print(f"\n⚠️  请求过于频繁 (429 Too Many Requests)")
-            print(f"连续 429 错误次数: {self.consecutive_429_errors}")
-            print(f"将等待 {self.reconnect_delay} 秒后重连...")
-            print("\n建议：")
-            print("1. 检查是否在短时间内多次启动程序")
-            print("2. 等待更长时间后再重试")
-            print("3. 如果持续出现，可能需要联系 Whale Alert 支持")
+            print(f"\n⚠️  请求过于频繁 (429 Too Many Requests)", flush=True)
+            print(f"连续 429 错误次数: {self.consecutive_429_errors}", flush=True)
+            print(f"将等待 {self.reconnect_delay} 秒后重连...", flush=True)
+            print("\n建议：", flush=True)
+            print("1. 检查是否在短时间内多次启动程序", flush=True)
+            print("2. 等待更长时间后再重试", flush=True)
+            print("3. 如果持续出现，可能需要联系 Whale Alert 支持", flush=True)
         else:
             # 非 429 错误，重置计数器
             self.consecutive_429_errors = 0
@@ -252,51 +252,51 @@ class WhaleAlertWebSocket:
                 status_code = "404"
             
             if status_code:
-                print(f"\n⚠️  WebSocket 握手失败 (HTTP {status_code})")
+                print(f"\n⚠️  WebSocket 握手失败 (HTTP {status_code})", flush=True)
                 if status_code == "429":
-                    print("请求过于频繁，请等待后重试")
+                    print("请求过于频繁，请等待后重试", flush=True)
                 elif status_code == "401/403":
-                    print("API 密钥认证失败")
-                    print("1. 检查 WHALE_ALERT_API_KEY 是否正确")
-                    print("2. 确认 API 密钥未过期")
-                    print("3. 确认订阅计划支持 WebSocket/Custom Alerts")
+                    print("API 密钥认证失败", flush=True)
+                    print("1. 检查 WHALE_ALERT_API_KEY 是否正确", flush=True)
+                    print("2. 确认 API 密钥未过期", flush=True)
+                    print("3. 确认订阅计划支持 WebSocket/Custom Alerts", flush=True)
                 elif status_code == "404":
-                    print("WebSocket 端点不存在")
-                    print("请检查 WebSocket URL 是否正确")
+                    print("WebSocket 端点不存在", flush=True)
+                    print("请检查 WebSocket URL 是否正确", flush=True)
             else:
-                print("\n⚠️  WebSocket 握手失败 - 可能的原因：")
-                print("1. API 密钥无效或已过期")
-                print("2. API 密钥没有 WebSocket 权限")
-                print("3. WebSocket 端点不正确")
-                print("4. 需要不同的认证方式")
-                print("\n建议检查：")
-                print(f"- 确认 WHALE_ALERT_API_KEY 环境变量已正确设置")
-                print(f"- 登录 Whale Alert 控制台确认 API 密钥状态")
-                print(f"- 确认订阅计划支持 WebSocket/Custom Alerts")
-                print(f"- 尝试在本地测试连接以排除网络问题")
+                print("\n⚠️  WebSocket 握手失败 - 可能的原因：", flush=True)
+                print("1. API 密钥无效或已过期", flush=True)
+                print("2. API 密钥没有 WebSocket 权限", flush=True)
+                print("3. WebSocket 端点不正确", flush=True)
+                print("4. 需要不同的认证方式", flush=True)
+                print("\n建议检查：", flush=True)
+                print(f"- 确认 WHALE_ALERT_API_KEY 环境变量已正确设置", flush=True)
+                print(f"- 登录 Whale Alert 控制台确认 API 密钥状态", flush=True)
+                print(f"- 确认订阅计划支持 WebSocket/Custom Alerts", flush=True)
+                print(f"- 尝试在本地测试连接以排除网络问题", flush=True)
     
     def on_close(self, ws, close_status_code, close_msg):
         """连接关闭"""
         close_msg_str = str(close_msg) if close_msg else ""
-        print(f"WebSocket连接关闭 (code: {close_status_code}, msg: {close_msg_str})")
+        print(f"WebSocket连接关闭 (code: {close_status_code}, msg: {close_msg_str})", flush=True)
         
         # 解释关闭代码
         if close_status_code == 1000:
-            print("正常关闭")
+            print("正常关闭", flush=True)
         elif close_status_code == 1001:
-            print("端点离开（服务器关闭或浏览器导航）")
+            print("端点离开（服务器关闭或浏览器导航）", flush=True)
         elif close_status_code == 1006:
-            print("异常关闭（连接未正常关闭）")
+            print("异常关闭（连接未正常关闭）", flush=True)
         elif close_status_code == 1008:
-            print("策略违规")
+            print("策略违规", flush=True)
         elif close_status_code == 1011:
-            print("服务器错误")
+            print("服务器错误", flush=True)
         elif close_status_code == 4001:
-            print("认证失败 - 请检查 API 密钥")
+            print("认证失败 - 请检查 API 密钥", flush=True)
         elif close_status_code == 4003:
-            print("订阅错误 - 请检查订阅参数")
+            print("订阅错误 - 请检查订阅参数", flush=True)
         else:
-            print(f"未知关闭代码: {close_status_code}")
+            print(f"未知关闭代码: {close_status_code}", flush=True)
         
         self.subscribed = False
         
@@ -304,9 +304,9 @@ class WhaleAlertWebSocket:
         if close_status_code != 1000 and self.running:  # 非正常关闭
             # 如果是 429 错误导致的关闭，使用更长的延迟
             if self.consecutive_429_errors > 0:
-                print(f"⚠️  由于请求过于频繁，将等待 {self.reconnect_delay} 秒后重连...")
+                print(f"⚠️  由于请求过于频繁，将等待 {self.reconnect_delay} 秒后重连...", flush=True)
             else:
-                print(f"{self.reconnect_delay}秒后尝试重连...")
+                print(f"{self.reconnect_delay}秒后尝试重连...", flush=True)
             time.sleep(self.reconnect_delay)
             if self.running:  # 如果还在运行，尝试重连
                 self.start()
@@ -346,11 +346,11 @@ class WhaleAlertWebSocket:
             # 显示订阅信息
             blockchain_info = f", 区块链={settings.BLOCKCHAINS}" if settings.BLOCKCHAINS else " (所有链)"
             symbol_info = f"币种={settings.SYMBOLS}" if settings.SYMBOLS else "所有币种"
-            print(f"已发送订阅请求: {symbol_info}{blockchain_info}, 最小金额=${settings.WHALE_ALERT_MIN_VALUE_USD:,.0f}")
+            print(f"已发送订阅请求: {symbol_info}{blockchain_info}, 最小金额=${settings.WHALE_ALERT_MIN_VALUE_USD:,.0f}", flush=True)
             
             self.subscribed = False  # 等待确认
         except Exception as e:
-            print(f"订阅错误: {e}")
+            print(f"订阅错误: {e}", flush=True)
     
     def start(self):
         """启动WebSocket连接"""
@@ -376,10 +376,10 @@ class WhaleAlertWebSocket:
             header=headers
         )
         self.running = True
-        # 不显示完整的URL（包含API key）
-        display_url = self.ws_url.split('?')[0] if '?' in self.ws_url else self.ws_url
-        print(f"正在连接到 {display_url}...")
-        print(f"API 密钥长度: {len(self.api_key)} 字符")
+            # 不显示完整的URL（包含API key）
+            display_url = self.ws_url.split('?')[0] if '?' in self.ws_url else self.ws_url
+            print(f"正在连接到 {display_url}...", flush=True)
+            print(f"API 密钥长度: {len(self.api_key)} 字符", flush=True)
         
         try:
             self.ws.run_forever(
@@ -387,13 +387,13 @@ class WhaleAlertWebSocket:
                 ping_timeout=10     # ping超时10秒
             )
         except Exception as e:
-            print(f"WebSocket 运行错误: {e}")
+            print(f"WebSocket 运行错误: {e}", flush=True)
             if self.running:
                 # 如果是 429 错误导致的异常，使用更长的延迟
                 if self.consecutive_429_errors > 0:
-                    print(f"⚠️  由于请求过于频繁，将等待 {self.reconnect_delay} 秒后重连...")
+                    print(f"⚠️  由于请求过于频繁，将等待 {self.reconnect_delay} 秒后重连...", flush=True)
                 else:
-                    print(f"{self.reconnect_delay}秒后尝试重连...")
+                    print(f"{self.reconnect_delay}秒后尝试重连...", flush=True)
                 time.sleep(self.reconnect_delay)
                 if self.running:
                     self.start()  # 递归重连
@@ -411,6 +411,6 @@ if __name__ == '__main__':
     try:
         client.start()
     except KeyboardInterrupt:
-        print("\n正在停止...")
+        print("\n正在停止...", flush=True)
         client.stop()
 

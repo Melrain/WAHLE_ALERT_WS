@@ -35,7 +35,7 @@ class PriceObserver:
                 self.redis_client.update_stats()
                 return
             
-            print(f"检查 {len(active_events)} 个活跃观察窗口...")
+            print(f"检查 {len(active_events)} 个活跃观察窗口...", flush=True)
             
             for event_id in active_events:
                 try:
@@ -98,17 +98,17 @@ class PriceObserver:
                                 min_change_pct=min_change
                             )
                             
-                            print(f"✓ 观察完成: {event_id[:8]}... | 变化: {change_pct:+.2f}% | 方向: {direction}")
+                            print(f"✓ 观察完成: {event_id[:8]}... | 变化: {change_pct:+.2f}% | 方向: {direction}", flush=True)
                             
                             # 更新统计
                             self.redis_client.update_stats()
                 
                 except Exception as e:
-                    print(f"检查观察窗口 {event_id} 时出错: {e}")
+                    print(f"检查观察窗口 {event_id} 时出错: {e}", flush=True)
                     continue
         
         except Exception as e:
-            print(f"检查观察窗口时出错: {e}")
+            print(f"检查观察窗口时出错: {e}", flush=True)
         finally:
             # 每次检查后都更新统计信息（确保数据实时）
             try:
@@ -119,13 +119,19 @@ class PriceObserver:
     def run(self):
         """运行观察器（阻塞）"""
         self.running = True
-        print(f"价格观察器启动，每 {self.check_interval} 秒检查一次")
+        print(f"价格观察器启动，每 {self.check_interval} 秒检查一次", flush=True)
         
+        check_count = 0
         while self.running:
             try:
                 self.check_observations()
+                check_count += 1
+                # 每 12 次检查（约 1 小时）打印一次心跳，确保日志持续输出
+                if check_count % 12 == 0:
+                    from datetime import datetime
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 心跳: 观察器运行正常，已检查 {check_count} 次", flush=True)
             except Exception as e:
-                print(f"观察器错误: {e}")
+                print(f"观察器错误: {e}", flush=True)
             
             # 等待指定间隔
             for _ in range(self.check_interval):
@@ -133,24 +139,24 @@ class PriceObserver:
                     break
                 time.sleep(1)
         
-        print("价格观察器已停止")
+        print("价格观察器已停止", flush=True)
     
     def start(self):
         """在后台线程启动观察器"""
         if self.thread and self.thread.is_alive():
-            print("观察器已在运行")
+            print("观察器已在运行", flush=True)
             return
         
         self.thread = threading.Thread(target=self.run, daemon=True)
         self.thread.start()
-        print("价格观察器已在后台启动")
+        print("价格观察器已在后台启动", flush=True)
     
     def stop(self):
         """停止观察器"""
         self.running = False
         if self.thread:
             self.thread.join(timeout=5)
-        print("价格观察器已停止")
+        print("价格观察器已停止", flush=True)
 
 
 if __name__ == '__main__':

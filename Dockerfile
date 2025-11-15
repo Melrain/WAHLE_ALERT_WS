@@ -26,5 +26,6 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
 # 运行主程序（main_ws.py 是实时监控系统）
-CMD ["python", "main_ws.py"]
+# 使用 -u 参数强制无缓冲输出，确保日志实时显示
+CMD ["python", "-u", "main_ws.py"]
 
