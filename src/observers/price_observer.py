@@ -31,6 +31,8 @@ class PriceObserver:
             active_events = self.redis_client.get_active_observations()
             
             if not active_events:
+                # 即使没有活跃窗口，也更新统计信息（确保 total_events 等是最新的）
+                self.redis_client.update_stats()
                 return
             
             print(f"检查 {len(active_events)} 个活跃观察窗口...")
@@ -107,6 +109,12 @@ class PriceObserver:
         
         except Exception as e:
             print(f"检查观察窗口时出错: {e}")
+        finally:
+            # 每次检查后都更新统计信息（确保数据实时）
+            try:
+                self.redis_client.update_stats()
+            except:
+                pass  # 如果更新失败，不影响主流程
     
     def run(self):
         """运行观察器（阻塞）"""

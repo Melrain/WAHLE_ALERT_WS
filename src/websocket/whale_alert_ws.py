@@ -201,6 +201,9 @@ class WhaleAlertWebSocket:
                 window_hours=24
             )
             
+            # 更新统计信息（实时更新 total_events 和 observing_count）
+            self.redis_client.update_stats()
+            
             # 格式化显示转账方向
             from_addr = alert_data.get('from', 'Unknown')
             to_addr = alert_data.get('to', 'Unknown')
