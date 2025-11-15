@@ -1,0 +1,50 @@
+# 排除不需要部署的文件和目录
+
+# 虚拟环境
+venv/
+.venv/
+env/
+ENV/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 数据文件（本地数据不需要部署）
+data/raw/*
+data/processed/*
+data/results/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/results/.gitkeep
+
+# Jupyter Notebooks
+notebooks/
+*.ipynb
+.ipynb_checkpoints/
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 环境变量文件（Railway 使用环境变量配置）
+.env
+.env.local
+.env.*.local
+
+# Docker 相关（如果使用 Railway 的 Dockerfile）
+docker-compose.yml
+
+# 文档（可选，如果需要可以保留）
+# README*.md
+# *.md
+
