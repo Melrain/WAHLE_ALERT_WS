@@ -53,11 +53,35 @@ class WhaleAlertWebSocket:
                 error_msg = data.get('error', 'Unknown error')
                 print(f"✗ 订阅错误: {error_msg}")
                 print(f"完整错误信息: {data}")
-                # 如果是区块链错误，提供建议
-                if 'blockchain' in error_msg.lower():
+                
+                # 处理不同类型的错误
+                error_lower = error_msg.lower()
+                
+                if 'rate limit' in error_lower or 'limit exceeded' in error_lower:
+                    print("\n⚠️  警报速率限制超出！")
+                    print("Whale Alert API 每小时最多接收 100 条警报")
+                    print("\n解决方案：")
+                    print("1. 减少订阅的币种数量（建议 3-5 个主要币种）")
+                    print("2. 减少订阅的区块链数量（或留空以监测所有链）")
+                    print("3. 增加最小转账金额（WHALE_ALERT_MIN_VALUE_USD）")
+                    print("\n当前订阅配置：")
+                    print(f"  - 币种: {settings.SYMBOLS if settings.SYMBOLS else '所有币种'}")
+                    print(f"  - 区块链: {settings.BLOCKCHAINS if settings.BLOCKCHAINS else '所有链'}")
+                    print(f"  - 最小金额: ${settings.WHALE_ALERT_MIN_VALUE_USD:,.0f}")
+                    print("\n建议配置（在 Railway 环境变量中设置）：")
+                    print("  SYMBOLS=btc,eth,sol")
+                    print("  BLOCKCHAINS=  # 留空，监测所有链")
+                    print("  WHALE_ALERT_MIN_VALUE_USD=1000000  # 增加到 100 万美元")
+                    
+                elif 'blockchain' in error_lower:
                     print("\n提示: 可能某些区块链名称不正确")
                     print("常见正确的区块链名称: bitcoin, ethereum, solana, avalanche, polygon, bsc, ripple, tron")
                     print("如果只想订阅币种，可以尝试不提供 blockchains 参数")
+                    
+                elif 'api' in error_lower or 'key' in error_lower or 'auth' in error_lower:
+                    print("\n⚠️  API 认证错误")
+                    print("请检查 WHALE_ALERT_API_KEY 环境变量是否正确设置")
+                    
                 return
             
             # 根据官方文档，消息类型通过 'type' 字段判断
@@ -111,12 +135,11 @@ class WhaleAlertWebSocket:
             amount = float(first_amount.get('amount', 0))
             amount_usd = float(first_amount.get('value_usd', 0))
             
-            # 获取当前价格
-            symbol = f"{currency.upper()}USDT"
-            current_price = self.binance.get_current_price(symbol)
+            # 获取当前价格（BinanceCollector 会处理稳定币和交易对转换）
+            current_price = self.binance.get_current_price(currency)
             
             if not current_price:
-                print(f"无法获取价格: {symbol}，跳过事件 {event_id[:8]}...")
+                print(f"无法获取价格: {currency.upper()}，跳过事件 {event_id[:8]}...")
                 return
             
             # 准备事件数据

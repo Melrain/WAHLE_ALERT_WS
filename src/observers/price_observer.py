@@ -53,14 +53,13 @@ class PriceObserver:
                         continue
                     
                     currency = event.get('currency', 'btc')
-                    symbol = f"{currency.upper()}USDT"
                     baseline_price = float(event.get('baseline_price', 0))
                     
                     if baseline_price == 0:
                         continue
                     
-                    # 获取当前价格
-                    current_price = self.binance.get_current_price(symbol)
+                    # 获取当前价格（BinanceCollector 会处理稳定币和交易对转换）
+                    current_price = self.binance.get_current_price(currency)
                     if not current_price or current_price == 0:
                         continue
                     

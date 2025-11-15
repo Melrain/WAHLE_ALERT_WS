@@ -147,11 +147,24 @@ class BinanceCollector:
         获取当前价格
         
         参数:
-        - symbol: 交易对，如 'BTCUSDT'
+        - symbol: 交易对，如 'BTCUSDT'，或币种代码如 'USDT'
         
         返回:
         - 当前价格，如果获取失败返回None
         """
+        # 稳定币直接返回 1.00（锚定美元）
+        stablecoins = {'USDT', 'USDC', 'BUSD', 'TUSD', 'DAI', 'PAX', 'USDP'}
+        if symbol.upper() in stablecoins:
+            return 1.0
+        
+        # 如果已经是交易对格式（如 BTCUSDT），直接使用
+        if 'USDT' in symbol.upper() and len(symbol) > 4:
+            # 已经是交易对格式，如 BTCUSDT
+            pass
+        else:
+            # 如果是币种代码，转换为交易对
+            symbol = f"{symbol.upper()}USDT"
+        
         try:
             params = {'symbol': symbol}
             response = requests.get(
@@ -162,6 +175,16 @@ class BinanceCollector:
             response.raise_for_status()
             data = response.json()
             return float(data.get('price', 0))
+        except requests.exceptions.HTTPError as e:
+            # 如果是 400 错误，可能是交易对不存在
+            if e.response and e.response.status_code == 400:
+                # 尝试其他可能的交易对格式
+                base_symbol = symbol.replace('USDT', '')
+                # 某些币种可能使用不同的交易对，这里可以扩展
+                print(f"⚠️  交易对 {symbol} 不存在，可能需要使用其他交易对")
+            else:
+                print(f"获取价格失败 {symbol}: {e}")
+            return None
         except Exception as e:
             print(f"获取价格失败 {symbol}: {e}")
             return None
